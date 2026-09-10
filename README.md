@@ -1,6 +1,18 @@
-# whole-living-map
+# Whole Living Map / Seb's Life
 
 This project was created with Shipper.
+
+## Multi-user setup
+
+The app uses Supabase Auth, Postgres and Row Level Security so every user gets a private, empty dashboard.
+
+1. Create a Supabase project.
+2. Run `supabase/migrations/202609100001_multi_user_foundation.sql` in the Supabase SQL editor.
+3. Copy `.env.example` to `.env.local` and add the project URL and public anon key.
+4. Add the local and Vercel URLs to Supabase Auth's allowed redirect URLs.
+5. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to Vercel.
+
+Never put service-role keys, Google secrets, health tokens or Open Banking credentials in variables prefixed with `VITE_`; browser code can read them. Provider secrets must stay in server-side functions.
 
 ## 🚀 Tech Stack
 

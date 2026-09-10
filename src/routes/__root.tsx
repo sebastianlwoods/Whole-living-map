@@ -2,6 +2,8 @@ import { createRootRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { useEffect, useState } from "react";
 import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
+import { AuthGate } from "@/components/auth-gate";
+import { useAuth } from "@/lib/auth";
 
 const NAV = [
   { to: "/", label: "Today" },
@@ -58,6 +60,7 @@ function ThemeToggle() {
 }
 
 function RootLayout() {
+  const { profile, user, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -94,7 +97,17 @@ function RootLayout() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
+            <span className="hidden max-w-44 truncate text-xs text-muted-foreground sm:block">
+              {profile?.displayName || user?.email}
+            </span>
             <ThemeToggle />
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="hidden rounded-full border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground sm:block"
+            >
+              Sign out
+            </button>
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
@@ -148,4 +161,8 @@ function RootLayout() {
   );
 }
 
-export const Route = createRootRoute({ component: RootLayout });
+function ProtectedRoot() {
+  return <AuthGate><RootLayout /></AuthGate>;
+}
+
+export const Route = createRootRoute({ component: ProtectedRoot });

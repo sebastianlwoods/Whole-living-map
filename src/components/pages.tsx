@@ -526,37 +526,32 @@ export function HistoryPage() {
 
 /* ---------------- Connections ---------------- */
 const SOURCES = [
-  { name: "Fitbit", kind: "Activity, sleep, heart rate", status: "connected", sync: "Synced 12 minutes ago", perms: ["Read activity & steps", "Read sleep stages", "Read resting heart rate"], method: "Fitbit OAuth" },
-  { name: "Apple Health", kind: "Workouts, steps, sleep", status: "import", sync: "Last import: 2 days ago", perms: ["HealthKit read via companion app", "Manual export file import"], method: "HealthKit / file import" },
-  { name: "Google — Gmail & Calendar", kind: "Priority email, events", status: "connected", sync: "Synced 4 minutes ago", perms: ["Read email metadata & subjects", "Read calendar events"], method: "Google OAuth" },
-  { name: "Barclays", kind: "Transactions, balances", status: "connected", sync: "Synced 1 hour ago", perms: ["Read account balances", "Read transaction history"], method: "Regulated Open Banking" },
-  { name: "Santander", kind: "Transactions, balances", status: "disconnected", sync: "Never connected", perms: ["Read account balances", "Read transaction history"], method: "Regulated Open Banking" },
+  { name: "Google Health / Fitbit", kind: "Activity, sleep, heart rate", status: "setup", sync: "Available after Google Health setup", perms: ["Read activity & steps", "Read sleep", "Read heart rate"], method: "Google OAuth" },
+  { name: "Apple Health", kind: "Workouts, steps, sleep", status: "planned", sync: "Companion app required", perms: ["HealthKit read via companion app", "Manual export file import"], method: "HealthKit / file import" },
+  { name: "Google — Gmail & Calendar", kind: "Priority email, events", status: "planned", sync: "Not connected", perms: ["Read email metadata & subjects", "Read calendar events"], method: "Google OAuth" },
+  { name: "Barclays", kind: "Transactions, balances", status: "planned", sync: "TrueLayer sandbox first", perms: ["Read account balances", "Read transaction history"], method: "Regulated Open Banking" },
+  { name: "Santander", kind: "Transactions, balances", status: "planned", sync: "TrueLayer sandbox first", perms: ["Read account balances", "Read transaction history"], method: "Regulated Open Banking" },
 ];
 export function ConnectionsPage() {
-  const [state, setState] = useState<Record<string, string>>(
-    Object.fromEntries(SOURCES.map((s) => [s.name, s.status])),
-  );
   return (
     <div>
       <PageHeader
         eyebrow="Connections"
         title="Sources, permissions and sync"
-        description="Every connection is read-only and consent-based. Bank data flows through regulated Open Banking — this app never asks for or stores bank passwords."
+        description="Nothing is connected until you explicitly approve it. Bank data will flow through regulated Open Banking — this app never asks for or stores bank passwords."
       />
       <Panel className="mb-6">
         <div className="flex flex-wrap gap-2">
           <Pill tone="success">Read-only access</Pill>
           <Pill tone="info">Encrypted in transit and at rest</Pill>
           <Pill tone="primary">No data sales, no targeted ads</Pill>
-          <Pill tone="warning">Demo data is clearly labelled</Pill>
+          <Pill tone="warning">No connection is active yet</Pill>
         </div>
       </Panel>
       <div className="grid gap-6 lg:grid-cols-2">
         {SOURCES.map((s) => {
-          const st = state[s.name];
-          const on = st === "connected";
           return (
-            <Panel key={s.name} title={s.name} hint={s.kind} actions={<Pill tone={on ? "success" : st === "import" ? "info" : "muted"}>{on ? "Connected" : st === "import" ? "Import only" : "Not connected"}</Pill>}>
+            <Panel key={s.name} title={s.name} hint={s.kind} actions={<Pill tone={s.status === "setup" ? "info" : "muted"}>{s.status === "setup" ? "Setup in progress" : "Planned"}</Pill>}>
               <p className="mb-3 text-xs text-muted-foreground">{s.sync} · via {s.method}</p>
               <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Permissions granted</p>
               <ul className="mb-4 space-y-1.5">
@@ -569,11 +564,11 @@ export function ConnectionsPage() {
               </ul>
               <div className="flex gap-2">
                 <Button
-                  variant={on ? "outline" : "default"}
+                  variant="outline"
                   className="flex-1"
-                  onClick={() => setState((v) => ({ ...v, [s.name]: on ? "disconnected" : "connected" }))}
+                  disabled
                 >
-                  {on ? "Disconnect" : "Connect"}
+                  {s.status === "setup" ? "Connect after setup" : "Coming soon"}
                 </Button>
                 <Button variant="ghost" className="flex-1">Manual / CSV entry</Button>
               </div>
@@ -595,7 +590,6 @@ export function SettingsPage() {
     "Time & email": false,
   });
   const [confirm, setConfirm] = useState(false);
-  const hasDemo = store.hasDemo();
   return (
     <div>
       <PageHeader
@@ -639,11 +633,10 @@ export function SettingsPage() {
           </ul>
         </Panel>
 
-        <Panel title="Demo data" hint={hasDemo ? "Demo days are labelled throughout the app." : "No demo data present."}>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => store.resetDemo()}>Reload demo data</Button>
-            <Button variant="ghost" onClick={() => store.removeDemo()} disabled={!hasDemo}>Remove demo data</Button>
-          </div>
+        <Panel title="Your account starts empty" hint="No sample information is mixed into personal insights.">
+          <p className="text-sm leading-6 text-muted-foreground">
+            New accounts only contain check-ins you save or information you explicitly import from a connected service.
+          </p>
         </Panel>
 
         <Panel title="Delete everything" hint="Immediate and irreversible.">
@@ -656,7 +649,7 @@ export function SettingsPage() {
                 <Button
                   variant="destructive"
                   onClick={() => {
-                    store.clearAll();
+                    void store.clearAll();
                     setConfirm(false);
                   }}
                 >

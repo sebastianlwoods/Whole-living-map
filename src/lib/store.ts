@@ -1,6 +1,7 @@
-// Local-first data layer for Everything's Here.
-// Phase 1 uses an in-memory + subscribable store seeded with labelled demo data.
-// This is swapped for Shipper Cloud (per-user, encrypted) in a later phase.
+// Optimistic per-user data layer backed by Supabase.
+// The in-memory copy keeps the interface fast while Supabase provides persistence.
+
+import { supabase } from "@/lib/supabase";
 
 export type CheckIn = {
   date: string; // YYYY-MM-DD
@@ -117,7 +118,10 @@ function seedData(): Record<string, CheckIn> {
   return map;
 }
 
-let checkIns: Record<string, CheckIn> = seedData();
+let checkIns: Record<string, CheckIn> = {};
+let activeUserId: string | null = null;
+let loading = false;
+let lastError: string | null = null;
 const listeners = new Set<() => void>();
 let snapshotVersion = 0;
 
@@ -134,23 +138,90 @@ export const store = {
   version() {
     return snapshotVersion;
   },
+  loading() {
+    return loading;
+  },
+  error() {
+    return lastError;
+  },
+  async connect(userId: string) {
+    activeUserId = userId;
+    checkIns = {};
+    lastError = null;
+    loading = true;
+    emit();
+
+    if (!supabase) {
+      loading = false;
+      lastError = "Account services are not configured.";
+      emit();
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("check_ins")
+      .select("*")
+      .eq("user_id", userId)
+      .order("date", { ascending: false });
+
+    if (activeUserId !== userId) return;
+    loading = false;
+    if (error) {
+      lastError = error.message;
+    } else {
+      checkIns = Object.fromEntries((data ?? []).map((row) => {
+        const entry = fromRow(row);
+        return [entry.date, entry];
+      }));
+    }
+    emit();
+  },
+  disconnect() {
+    activeUserId = null;
+    checkIns = {};
+    loading = false;
+    lastError = null;
+    emit();
+  },
   all(): CheckIn[] {
     return Object.values(checkIns).sort((a, b) => (a.date < b.date ? 1 : -1));
   },
   get(date: string): CheckIn | undefined {
     return checkIns[date];
   },
-  upsert(entry: CheckIn) {
+  async upsert(entry: CheckIn) {
+    if (!activeUserId || !supabase) throw new Error("Sign in before saving a check-in.");
     checkIns[entry.date] = { ...entry };
+    lastError = null;
     emit();
+    const { error } = await supabase
+      .from("check_ins")
+      .upsert(toRow(activeUserId, entry), { onConflict: "user_id,date" });
+    if (error) {
+      lastError = error.message;
+      emit();
+      throw error;
+    }
   },
-  remove(date: string) {
+  async remove(date: string) {
+    if (!activeUserId || !supabase) return;
     delete checkIns[date];
     emit();
+    const { error } = await supabase.from("check_ins").delete().eq("user_id", activeUserId).eq("date", date);
+    if (error) {
+      lastError = error.message;
+      emit();
+    }
   },
-  clearAll() {
+  async clearAll() {
+    if (!activeUserId || !supabase) return;
     checkIns = {};
     emit();
+    const { error } = await supabase.from("check_ins").delete().eq("user_id", activeUserId);
+    if (error) {
+      lastError = error.message;
+      emit();
+    }
   },
   resetDemo() {
     checkIns = seedData();
@@ -164,6 +235,75 @@ export const store = {
     emit();
   },
 };
+
+type CheckInRow = {
+  date: string;
+  mood: number;
+  energy: number;
+  stress: number;
+  productivity: number;
+  sleep_hours: number | string;
+  sleep_quality: number;
+  exercise_minutes: number;
+  steps: number;
+  meals: number;
+  water_glasses: number;
+  alcohol_units: number | string;
+  social_minutes: number;
+  screen_hours: number | string;
+  spend: number | string;
+  habits: string[] | null;
+  notes: string | null;
+  source: CheckIn["source"];
+};
+
+function fromRow(row: CheckInRow): CheckIn {
+  return {
+    date: row.date,
+    mood: row.mood,
+    energy: row.energy,
+    stress: row.stress,
+    productivity: row.productivity,
+    sleepHours: Number(row.sleep_hours),
+    sleepQuality: row.sleep_quality,
+    exerciseMinutes: row.exercise_minutes,
+    steps: row.steps,
+    meals: row.meals,
+    waterGlasses: row.water_glasses,
+    alcoholUnits: Number(row.alcohol_units),
+    socialMinutes: row.social_minutes,
+    screenHours: Number(row.screen_hours),
+    spend: Number(row.spend),
+    habits: row.habits ?? [],
+    notes: row.notes ?? "",
+    source: row.source,
+  };
+}
+
+function toRow(userId: string, entry: CheckIn) {
+  return {
+    user_id: userId,
+    date: entry.date,
+    mood: entry.mood,
+    energy: entry.energy,
+    stress: entry.stress,
+    productivity: entry.productivity,
+    sleep_hours: entry.sleepHours,
+    sleep_quality: entry.sleepQuality,
+    exercise_minutes: entry.exerciseMinutes,
+    steps: entry.steps,
+    meals: entry.meals,
+    water_glasses: entry.waterGlasses,
+    alcohol_units: entry.alcoholUnits,
+    social_minutes: entry.socialMinutes,
+    screen_hours: entry.screenHours,
+    spend: entry.spend,
+    habits: entry.habits,
+    notes: entry.notes,
+    source: entry.source,
+    updated_at: new Date().toISOString(),
+  };
+}
 
 export function blankCheckIn(date: string): CheckIn {
   return {
