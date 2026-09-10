@@ -93,6 +93,7 @@ function TodayPage() {
   useSyncExternalStore(store.subscribe, store.version);
   const [date, setDate] = useState(todayISO());
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const existing = store.get(date);
   const [draft, setDraft] = useState<CheckIn>(() => store.get(todayISO()) ?? blankCheckIn(todayISO()));
@@ -120,9 +121,15 @@ function TodayPage() {
     setSaved(false);
   };
 
-  const save = () => {
-    store.upsert({ ...draft, date, source: draft.source === "demo" ? "manual" : draft.source });
-    setSaved(true);
+  const save = async () => {
+    setSaveError(null);
+    try {
+      await store.upsert({ ...draft, date, source: draft.source === "demo" ? "manual" : draft.source });
+      setSaved(true);
+    } catch (error) {
+      setSaved(false);
+      setSaveError(error instanceof Error ? error.message : "We could not save this check-in.");
+    }
   };
 
   const isToday = date === todayISO();
@@ -144,7 +151,7 @@ function TodayPage() {
               className="w-[9.5rem] bg-card"
               aria-label="Check-in date"
             />
-            <Button onClick={save} className="shadow-sm transition-all duration-200 hover:scale-[1.03]">
+            <Button onClick={() => void save()} className="shadow-sm transition-all duration-200 hover:scale-[1.03]">
               {existing ? "Update" : "Save"}
             </Button>
           </div>
@@ -160,6 +167,7 @@ function TodayPage() {
           <Pill>No entry yet for this day</Pill>
         )}
         {saved && <Pill tone="success">Changes saved</Pill>}
+        {saveError && <Pill tone="warning">{saveError}</Pill>}
         <Pill tone="info">{score.sample}-day sample in Life Score</Pill>
       </div>
 
