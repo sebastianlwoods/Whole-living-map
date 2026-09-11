@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { Session, User } from "@supabase/supabase-js";
+import type { EmailOtpType, Session, User } from "@supabase/supabase-js";
 import { store } from "@/lib/store";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
@@ -77,7 +77,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     };
 
-    void client.auth.getSession().then(({ data }) => hydrate(data.session));
+    const finishAuthRedirect = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const tokenHash = params.get("token_hash");
+      const type = params.get("type");
+
+      if (tokenHash && type) {
+        const { error: verificationError } = await client.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: type as EmailOtpType,
+        });
+
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        if (verificationError) {
+          if (active) {
+            setError(verificationError.message);
+            setLoading(false);
+          }
+          return;
+        }
+      }
+
+      const { data: sessionData } = await client.auth.getSession();
+      await hydrate(sessionData.session);
+    };
+
+    void finishAuthRedirect();
     const { data } = client.auth.onAuthStateChange((_event, nextSession) => {
       void hydrate(nextSession);
     });
