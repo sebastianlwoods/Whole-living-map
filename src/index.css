@@ -187,6 +187,35 @@
   --tracking-normal: 0em;
 }
 
+:root[data-accent="volt"] {
+  --primary: oklch(0.82 0.22 125);
+  --primary-foreground: oklch(0.18 0.03 125);
+  --ring: oklch(0.72 0.19 125);
+  --chart-1: oklch(0.76 0.2 125);
+  --accent: oklch(0.9 0.13 125);
+}
+
+:root[data-accent="ocean"] {
+  --primary: oklch(0.53 0.16 250);
+  --ring: oklch(0.53 0.16 250);
+  --chart-1: oklch(0.53 0.16 250);
+  --accent: oklch(0.9 0.05 235);
+}
+
+:root[data-accent="ember"] {
+  --primary: oklch(0.62 0.2 35);
+  --ring: oklch(0.62 0.2 35);
+  --chart-1: oklch(0.62 0.2 35);
+  --accent: oklch(0.91 0.07 55);
+}
+
+:root[data-accent="violet"] {
+  --primary: oklch(0.54 0.18 295);
+  --ring: oklch(0.54 0.18 295);
+  --chart-1: oklch(0.54 0.18 295);
+  --accent: oklch(0.9 0.06 295);
+}
+
 .dark {
   --background: oklch(0.2100 0.0090 60.0000);
   --foreground: oklch(0.9400 0.0110 84.5658);
@@ -248,6 +277,24 @@
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
 }
 
+.dark[data-accent="volt"] { --primary: oklch(0.86 0.22 125); --ring: oklch(0.86 0.22 125); }
+.dark[data-accent="ocean"] { --primary: oklch(0.7 0.15 245); --ring: oklch(0.7 0.15 245); }
+.dark[data-accent="ember"] { --primary: oklch(0.72 0.18 40); --ring: oklch(0.72 0.18 40); }
+.dark[data-accent="violet"] { --primary: oklch(0.72 0.15 295); --ring: oklch(0.72 0.15 295); }
+
+.dark {
+  --background: oklch(0.205 0.035 260);
+  --foreground: oklch(0.965 0.008 85);
+  --card: oklch(0.25 0.04 260);
+  --card-foreground: oklch(0.965 0.008 85);
+  --secondary: oklch(0.29 0.04 260);
+  --secondary-foreground: oklch(0.94 0.01 85);
+  --muted: oklch(0.275 0.034 260);
+  --muted-foreground: oklch(0.75 0.02 255);
+  --border: oklch(0.345 0.038 260);
+  --input: oklch(0.345 0.038 260);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -272,6 +319,59 @@
 
 .soft-card {
   box-shadow: 0 1px 2px oklch(0.28 0.02 60 / 0.04), 0 8px 24px -12px oklch(0.28 0.02 60 / 0.10);
+}
+
+.dashboard-surface {
+  background-image:
+    radial-gradient(circle at 92% 8%, color-mix(in oklab, var(--primary) 18%, transparent) 0, transparent 30rem),
+    radial-gradient(circle at 7% 42%, color-mix(in oklab, var(--info) 9%, transparent) 0, transparent 34rem);
+}
+
+.athletic-hero {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid color-mix(in oklab, var(--primary) 24%, var(--border));
+  background: radial-gradient(circle at 90% 15%, color-mix(in oklab, var(--primary) 32%, transparent), transparent 34%), var(--card);
+  box-shadow: 0 26px 70px -48px color-mix(in oklab, var(--primary) 70%, black);
+}
+
+.athletic-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 18rem;
+  height: 18rem;
+  right: -4rem;
+  top: -8rem;
+  border: 3.5rem solid color-mix(in oklab, var(--primary) 13%, transparent);
+  border-radius: 50%;
+}
+
+.athletic-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 1.5rem 0 1.5rem;
+  height: 3px;
+  border-radius: 999px 999px 0 0;
+  background: var(--primary);
+  opacity: 0.5;
+  transform: scaleX(0.35);
+  transform-origin: left;
+  transition: transform 300ms ease, opacity 300ms ease;
+}
+
+.athletic-card {
+  box-shadow: 0 18px 45px -34px color-mix(in oklab, var(--foreground) 35%, transparent);
+}
+
+.athletic-card:nth-child(2),
+.athletic-card:nth-child(5) {
+  background: linear-gradient(145deg, color-mix(in oklab, var(--primary) 34%, var(--card)), color-mix(in oklab, var(--primary) 9%, var(--card))) !important;
+}
+
+.athletic-card:hover::after {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .glass-nav {
