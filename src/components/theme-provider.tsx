@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "dark" | "light" | "system";
+export type Accent = "forest" | "volt" | "ocean" | "ember" | "violet";
 
 type ThemeProviderProps = {
   children: React.ReactNode;
@@ -11,11 +12,15 @@ type ThemeProviderProps = {
 type ThemeProviderState = {
   theme: Theme;
   setTheme: (theme: Theme) => void;
+  accent: Accent;
+  setAccent: (accent: Accent) => void;
 };
 
 const initialState: ThemeProviderState = {
   theme: "system",
   setTheme: () => null,
+  accent: "ember",
+  setAccent: () => null,
 };
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
@@ -28,6 +33,9 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
+  );
+  const [accent, setAccent] = useState<Accent>(
+    () => (localStorage.getItem("seb-life-accent") as Accent) || "ember"
   );
 
   useEffect(() => {
@@ -48,11 +56,20 @@ export function ThemeProvider({
     root.classList.add(theme);
   }, [theme]);
 
+  useEffect(() => {
+    window.document.documentElement.dataset.accent = accent;
+  }, [accent]);
+
   const value = {
     theme,
     setTheme: (theme: Theme) => {
       localStorage.setItem(storageKey, theme);
       setTheme(theme);
+    },
+    accent,
+    setAccent: (accent: Accent) => {
+      localStorage.setItem("seb-life-accent", accent);
+      setAccent(accent);
     },
   };
 
