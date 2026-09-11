@@ -17,6 +17,7 @@ type AuthContextValue = {
   error: string | null;
   signIn: (email: string, password: string) => Promise<string | null>;
   signUp: (email: string, password: string) => Promise<string | null>;
+  resendConfirmation: (email: string) => Promise<string | null>;
   signInWithGoogle: () => Promise<string | null>;
   signOut: () => Promise<void>;
   completeOnboarding: (displayName: string, focuses: string[]) => Promise<string | null>;
@@ -106,6 +107,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: { emailRedirectTo: window.location.origin },
       });
       return signUpError?.message ?? null;
+    },
+    async resendConfirmation(email) {
+      if (!supabase) return "Account services are not configured yet.";
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: window.location.origin },
+      });
+      return resendError?.message ?? null;
     },
     async signInWithGoogle() {
       if (!supabase) return "Account services are not configured yet.";
