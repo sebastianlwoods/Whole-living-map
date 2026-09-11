@@ -10,6 +10,7 @@ const NAV = [
   { to: "/dashboard", label: "Trends" },
   { to: "/history", label: "History" },
   { to: "/connections", label: "Connections" },
+  { to: "/settings", label: "Settings" },
 ] as const;
 
 function Wordmark() {
@@ -62,7 +63,7 @@ function RootLayout() {
   }, [pathname]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="dashboard-surface min-h-screen bg-background text-foreground">
       <header className="glass-nav sticky top-0 z-50 border-b border-border/70">
         <div className="mx-auto flex h-16 max-w-[1400px] items-center gap-4 px-4 sm:px-6">
           <Link to="/" className="shrink-0">

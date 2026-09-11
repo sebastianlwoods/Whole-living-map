@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState, useSyncExternalStore } from "react";
-import { EmptyState, PageHeader, Panel, Pill, Stat } from "@/components/shell";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState, useSyncExternalStore } from "react";
+import { PageHeader, Panel, Pill } from "@/components/shell";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,6 @@ import {
   blankCheckIn,
   formatLongDay,
   HABITS,
-  isoDaysAgo,
-  lifeScore,
   store,
   todayISO,
   type CheckIn,
@@ -25,7 +23,6 @@ const SCALES: { key: keyof CheckIn; label: string; hint: string }[] = [
   { key: "energy", label: "Energy", hint: "1 drained · 10 buzzing" },
   { key: "stress", label: "Stress", hint: "1 calm · 10 overwhelmed" },
   { key: "productivity", label: "Productivity", hint: "1 stalled · 10 flowing" },
-  { key: "sleepQuality", label: "Sleep quality", hint: "1 poor · 10 restful" },
 ];
 
 function ScaleRow({
@@ -105,9 +102,6 @@ function TodayPage() {
     setSaved(false);
   }
 
-  const entries = store.all();
-  const score = useMemo(() => lifeScore(entries), [entries]);
-
   const set = <K extends keyof CheckIn>(key: K, value: CheckIn[K]) => {
     setDraft((d) => ({ ...d, [key]: value }));
     setSaved(false);
@@ -133,14 +127,12 @@ function TodayPage() {
   };
 
   const isToday = date === todayISO();
-  const dayOptions = Array.from({ length: 14 }, (_, i) => isoDaysAgo(i));
-
   return (
     <div>
       <PageHeader
         eyebrow="Today"
         title={isToday ? "How has today been?" : `Editing ${formatLongDay(date)}`}
-        description="One short check-in a day is all the app needs. Everything else — trends, reviews and cross-domain insights — is built from these answers. You can edit any past day."
+        description="Your feelings are the useful human input. Health, sleep and activity should come from a connected device whenever possible."
         actions={
           <div className="flex items-center gap-2">
             <Input
@@ -168,7 +160,7 @@ function TodayPage() {
         )}
         {saved && <Pill tone="success">Changes saved</Pill>}
         {saveError && <Pill tone="warning">{saveError}</Pill>}
-        <Pill tone="info">{score.sample}-day sample in Life Score</Pill>
+        <Pill tone="info">About one minute</Pill>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
@@ -187,8 +179,12 @@ function TodayPage() {
             </div>
           </Panel>
 
-          <Panel title="Body & day" hint="Leave anything blank at zero — partial days still count.">
-            <div className="grid gap-4 sm:grid-cols-3">
+          <details className="group rounded-2xl border border-border bg-card p-5 sm:p-6">
+            <summary className="cursor-pointer list-none text-sm font-semibold text-foreground">
+              <span className="flex items-center justify-between">Add data manually <span className="text-xs font-normal text-muted-foreground group-open:hidden">Only if it is not connected</span></span>
+            </summary>
+            <p className="mt-2 text-sm text-muted-foreground">Fallback for people without Apple Health or Fitbit. Connected values will eventually replace these fields automatically.</p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-3">
               <NumberField label="Sleep" value={draft.sleepHours} step={0.25} suffix="hrs" onChange={(v) => set("sleepHours", v)} />
               <NumberField label="Exercise" value={draft.exerciseMinutes} step={5} suffix="min" onChange={(v) => set("exerciseMinutes", v)} />
               <NumberField label="Steps" value={draft.steps} step={100} onChange={(v) => set("steps", v)} />
@@ -199,7 +195,8 @@ function TodayPage() {
               <NumberField label="Screen time" value={draft.screenHours} step={0.5} suffix="hrs" onChange={(v) => set("screenHours", v)} />
               <NumberField label="Spending" value={draft.spend} step={0.5} suffix="£" onChange={(v) => set("spend", v)} />
             </div>
-          </Panel>
+            <div className="mt-5"><ScaleRow label="Sleep quality" hint="1 poor · 10 restful" value={draft.sleepQuality} onChange={(v) => set("sleepQuality", v)} /></div>
+          </details>
 
           <Panel title="Notes" hint="Context you'll want when a trend looks odd in three months.">
             <Textarea
@@ -213,8 +210,18 @@ function TodayPage() {
         </div>
 
         <div className="space-y-6">
-          <Panel title="Routines" hint="Progress, not punishment — a missed day never resets anything.">
-            <div className="space-y-2">
+          <Panel title="Automatic by default" hint="The aim is less admin, not another app to maintain.">
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <p><span className="font-semibold text-foreground">Apple Health or Fitbit</span> will supply sleep, steps, workouts, heart rate and calories.</p>
+              <p><span className="font-semibold text-foreground">Bank connections</span> will supply spending. Calendar and email will supply today&rsquo;s admin.</p>
+              <Button asChild variant="outline" className="w-full"><Link to="/connections">Choose connections</Link></Button>
+            </div>
+          </Panel>
+
+          <details className="group rounded-2xl border border-border bg-card p-5 sm:p-6">
+            <summary className="cursor-pointer list-none text-sm font-semibold text-foreground">Optional routines</summary>
+            <p className="mt-2 text-xs text-muted-foreground">Use these only if tracking them is genuinely helpful.</p>
+            <div className="mt-4 space-y-2">
               {HABITS.map((h) => {
                 const on = draft.habits.includes(h.id);
                 return (
@@ -249,65 +256,7 @@ function TodayPage() {
                 );
               })}
             </div>
-          </Panel>
-
-          <Panel title="Life Score" hint="Fully transparent — every part is shown and weighted below.">
-            {score.sample === 0 ? (
-              <EmptyState
-                title="Nothing to score yet"
-                description="Save your first check-in and a 7-day Life Score appears here with its full working shown."
-              />
-            ) : (
-              <>
-                <div className="mb-5 flex items-end gap-3">
-                  <span className="font-display text-5xl font-semibold leading-none text-primary">{score.score}</span>
-                  <span className="pb-1 text-sm text-muted-foreground">
-                    / 100 · last {score.sample} days
-                  </span>
-                </div>
-                <div className="space-y-3">
-                  {score.breakdown.map((b) => (
-                    <div key={b.label}>
-                      <div className="mb-1 flex items-baseline justify-between text-sm">
-                        <span className="font-medium text-foreground">{b.label}</span>
-                        <span className="font-mono text-xs text-muted-foreground">
-                          {b.value} × {Math.round(b.weight * 100)}%
-                        </span>
-                      </div>
-                      <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
-                        <div
-                          className="h-full rounded-full bg-primary transition-all duration-500"
-                          style={{ width: `${b.value}%` }}
-                        />
-                      </div>
-                      <p className="mt-1 text-xs text-muted-foreground">{b.detail}</p>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </Panel>
-
-          <Panel title="Yesterday at a glance">
-            {(() => {
-              const y = store.get(isoDaysAgo(1));
-              if (!y)
-                return (
-                  <EmptyState
-                    title="No entry for yesterday"
-                    description="Pick yesterday's date above to fill it in — past-day editing is always open."
-                  />
-                );
-              return (
-                <div className="grid grid-cols-2 gap-3">
-                  <Stat label="Mood" value={y.mood} unit="/10" tone="primary" />
-                  <Stat label="Sleep" value={y.sleepHours} unit="hrs" tone="info" />
-                  <Stat label="Exercise" value={y.exerciseMinutes} unit="min" />
-                  <Stat label="Spend" value={`£${y.spend.toFixed(0)}`} tone="warning" />
-                </div>
-              );
-            })()}
-          </Panel>
+          </details>
         </div>
       </div>
     </div>
