@@ -7,16 +7,9 @@ import { useAuth } from "@/lib/auth";
 
 const NAV = [
   { to: "/", label: "Today" },
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/health", label: "Health" },
-  { to: "/nutrition", label: "Nutrition" },
-  { to: "/money", label: "Money" },
-  { to: "/time", label: "Time" },
-  { to: "/goals", label: "Goals" },
-  { to: "/insights", label: "Insights" },
+  { to: "/dashboard", label: "Trends" },
   { to: "/history", label: "History" },
   { to: "/connections", label: "Connections" },
-  { to: "/settings", label: "Settings" },
 ] as const;
 
 function Wordmark() {
@@ -24,12 +17,12 @@ function Wordmark() {
     <span className="shipper-theme-logo-lockup flex items-center gap-1">
       <img
         src="/logo.png"
-        alt="Everything's Here"
+        alt="Seb's Life"
         className="shipper-theme-logo -ml-1 h-8 w-8 md:h-9 md:w-9"
       />
       <span className="shipper-theme-wordmark hidden items-baseline gap-1.5 text-lg tracking-tight md:flex">
-        <span data-logo-muted className="font-light text-foreground/70">Everything&rsquo;s</span>
-        <span className="font-bold text-foreground">Here</span>
+        <span data-logo-muted className="font-light text-foreground/70">Seb&rsquo;s</span>
+        <span className="font-bold text-foreground">Life</span>
       </span>
     </span>
   );
