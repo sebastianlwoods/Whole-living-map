@@ -52,7 +52,7 @@ function Category({ card }: { card: CategoryCard }) {
     <Link
       to={card.to}
       className={cn(
-        "group relative flex min-h-52 flex-col overflow-hidden rounded-[1.6rem] border border-border/70 p-5 transition-all duration-300",
+        "athletic-card group relative flex min-h-52 flex-col overflow-hidden rounded-[1.6rem] border border-border/70 p-5 transition-all duration-300",
         "hover:-translate-y-1 hover:border-primary/25 hover:shadow-xl sm:p-6",
         card.tone,
       )}
@@ -67,10 +67,10 @@ function Category({ card }: { card: CategoryCard }) {
         <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{card.eyebrow}</p>
         <div className="mt-2 flex items-end justify-between gap-4">
           <div>
-            <h2 className="font-display text-2xl font-semibold text-foreground">{card.title}</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">{card.title}</h2>
             <p className="mt-1 text-sm text-muted-foreground">{card.detail}</p>
           </div>
-          <p className="shrink-0 font-display text-lg font-semibold text-foreground">{card.value}</p>
+          <p className="shrink-0 text-lg font-bold text-foreground">{card.value}</p>
         </div>
       </div>
     </Link>
@@ -100,11 +100,11 @@ function TodayPage() {
 
   return (
     <div className="mx-auto max-w-7xl">
-      <section className="rise-in mb-7 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <section className="athletic-hero rise-in mb-7 flex flex-col gap-5 overflow-hidden rounded-[2rem] px-5 py-7 sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:py-9">
         <div>
-          <p className="mb-2 text-sm font-medium text-primary">{longToday()}</p>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">{greeting()}, {name}.</h1>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">Here&rsquo;s the shape of your day. Open an area only when you want the detail.</p>
+          <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-primary">{longToday()} · Daily performance</p>
+          <h1 className="text-4xl font-bold tracking-[-0.045em] text-foreground sm:text-6xl">{greeting()}, {name}.</h1>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">Your health, time and money in one live view. Go deeper only when something needs attention.</p>
         </div>
         <Button asChild size="lg" className="rounded-full px-5 shadow-sm"><Link to="/check-in">Update today</Link></Button>
       </section>
@@ -115,14 +115,14 @@ function TodayPage() {
           {score.sample > 0 && <span className="text-xs text-muted-foreground">Life score {score.score}/100</span>}
         </div>
         <div className="grid gap-3 lg:grid-cols-3">
-          <DailyItem icon={<Inbox className="h-4 w-4" />} title="Inbox" detail="Connect Gmail to surface only emails that need action" action={<Link to="/connections" className="text-xs font-semibold text-primary">Connect</Link>} />
+          <DailyItem icon={<Inbox className="h-4 w-4" />} title="Emails needing action" detail="Connect Gmail to calculate this automatically" action={<Link to="/connections" className="text-xs font-semibold text-primary">Connect</Link>} />
           <DailyItem icon={<CalendarDays className="h-4 w-4" />} title="Reminders & calendar" detail="No calendar connected yet" action={<Link to="/connections" aria-label="Connect calendar" className="text-muted-foreground hover:text-foreground"><ChevronRight className="h-4 w-4" /></Link>} />
           <DailyItem icon={today ? <Activity className="h-4 w-4" /> : <GlassWater className="h-4 w-4" />} title={today ? "Today is updated" : "Nothing logged today"} detail={today ? "Your overview is using today’s saved data" : "Add what matters now; fill in the rest later"} action={<Link to="/check-in" className="text-xs font-semibold text-primary">{today ? "Edit" : "Add"}</Link>} />
         </div>
       </section>
 
       <div className="mb-4 flex items-end justify-between gap-4">
-        <div><h2 className="font-display text-2xl font-semibold text-foreground">Your life at a glance</h2><p className="mt-1 text-sm text-muted-foreground">Your chosen priorities appear first.</p></div>
+        <div><h2 className="text-2xl font-bold tracking-tight text-foreground">Your life at a glance</h2><p className="mt-1 text-sm text-muted-foreground">Your chosen priorities appear first.</p></div>
         <Link to="/settings" className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:block">Personalise</Link>
       </div>
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{ordered.map((card) => <Category key={card.title} card={card} />)}</section>
