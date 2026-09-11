@@ -25,7 +25,7 @@ function Frame({ children }: { children: ReactNode }) {
 }
 
 function SignIn() {
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signUp, resendConfirmation, signInWithGoogle } = useAuth();
   const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,6 +46,19 @@ function SignIn() {
     setMessage(await signInWithGoogle());
     setBusy(false);
   };
+
+  const resend = async () => {
+    if (!email.trim()) {
+      setMessage("Enter your email address first.");
+      return;
+    }
+    setBusy(true);
+    const result = await resendConfirmation(email.trim());
+    setMessage(result ?? "A fresh confirmation email has been sent. Open the newest email only; older links will no longer work.");
+    setBusy(false);
+  };
+
+  const needsConfirmation = message?.toLowerCase().includes("email not confirmed") ?? false;
 
   return (
     <Frame>
@@ -69,6 +82,11 @@ function SignIn() {
           <Input id="password" type="password" autoComplete={mode === "sign-in" ? "current-password" : "new-password"} minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1.5" />
         </div>
         {message && <p className="rounded-xl bg-secondary px-3 py-2 text-sm text-secondary-foreground">{message}</p>}
+        {needsConfirmation && (
+          <Button type="button" variant="outline" disabled={busy} onClick={resend} className="w-full">
+            Resend confirmation email
+          </Button>
+        )}
         <Button type="submit" disabled={busy} className="w-full">{busy ? "Please wait…" : mode === "sign-in" ? "Sign in" : "Create my dashboard"}</Button>
       </form>
       <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />or<span className="h-px flex-1 bg-border" /></div>
@@ -132,4 +150,3 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (!profile?.onboardingComplete) return <Onboarding />;
   return children;
 }
-
