@@ -3,6 +3,7 @@ import { useMemo, useState, useSyncExternalStore } from "react";
 import { EmptyState, PageHeader, Panel, Pill, Stat } from "@/components/shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useTheme, type Accent } from "@/components/theme-provider";
 import { HABITS, formatDay, pearson, store, type CheckIn } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -583,6 +584,7 @@ export function ConnectionsPage() {
 /* ---------------- Settings ---------------- */
 export function SettingsPage() {
   useSyncExternalStore(store.subscribe, store.version);
+  const { accent, setAccent } = useTheme();
   const [analysis, setAnalysis] = useState<Record<string, boolean>>({
     "Health & activity": true,
     "Nutrition & alcohol": true,
@@ -598,6 +600,31 @@ export function SettingsPage() {
         description="You decide what is analysed, what is kept and what is deleted. Nothing is shared with advertisers, and nothing is ever sold."
       />
       <div className="grid gap-6 lg:grid-cols-2">
+        <Panel title="Colour scheme" hint="Choose the energy of your dashboard. This preference stays on this device.">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 lg:grid-cols-3 xl:grid-cols-5">
+            {([
+              ["forest", "Forest", "#397a5b"],
+              ["volt", "Volt", "#b9f227"],
+              ["ocean", "Ocean", "#2878d4"],
+              ["ember", "Ember", "#ef5b35"],
+              ["violet", "Violet", "#8054d8"],
+            ] as [Accent, string, string][]).map(([value, label, colour]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setAccent(value)}
+                className={cn(
+                  "rounded-2xl border p-3 text-left transition-all hover:-translate-y-0.5",
+                  accent === value ? "border-foreground bg-secondary shadow-md" : "border-border bg-background",
+                )}
+              >
+                <span className="mb-3 block h-8 rounded-xl" style={{ backgroundColor: colour }} />
+                <span className="text-xs font-semibold text-foreground">{label}</span>
+              </button>
+            ))}
+          </div>
+        </Panel>
+
         <Panel title="Analysis controls" hint="Turn a domain off and it is excluded from all insights.">
           <div className="space-y-2">
             {Object.entries(analysis).map(([k, v]) => (
